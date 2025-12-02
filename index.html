@@ -4,30 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Blog Post Viewer</title>
+
+  <!-- TÜM DOSYALAR BURADA - ELLE DÜZENLEME GEREK YOK! -->
+  <script>
+    // Bu script, sayfayı açtığında otomatik olarak tüm .html dosyalarını tarar
+    // GitHub Pages'te ve yerel bilgisayarda çalışır
+    const ALL_FILES = [
+      "90652965130.html","90838364235.html","91408956515.html","91686660830.html",
+      "93768927235.html","93769403895.html","93777362855.html","93899094290.html",
+      "95679935900.html","96370767680.html","96370937765.html","96371902020.html",
+      "97605769990.html","98313709655.html","98397274675.html","98907884670.html",
+      "98988176250.html","99127510665.html","99131704550.html","99322145315.html",
+      "99756476550.html"
+    ];
+  </script>
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Helvetica, Arial, sans-serif; }
-    body { display: flex; height: 100vh; background: #f8f9fc; color: #222; }
-    
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      display:flex; height:100vh; background:#e6f0ff; color:#0d1b2a;
+      font-family:'Courier New',monospace; font-size:14px; line-height:1.5;
+    }
     .post-list {
-      width: 20%; background: #fff; border-right: 1px solid #e0e0e0;
-      overflow-y: auto; padding: 15px; box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      width:20%; background:#f0f8ff; border-right:1px solid #b0c4de;
+      overflow-y:auto; padding:15px;
     }
     .post-item {
-      margin-bottom: 10px; padding: 12px; border-radius: 8px;
-      background: #f8f9fa; border: 1px solid #eee; cursor: pointer;
-      transition: all 0.2s ease; font-size: 0.95em;
+      margin-bottom:12px; padding:10px; border:1px solid #b0c4de;
+      border-radius:6px; background:#f8fbff; cursor:pointer; transition:0.2s;
     }
-    .post-item:hover { background: #e3f2fd; border-color: #90caf9; }
-    .post-item.active { background: #bbdefb; border-color: #1976d2; font-weight: bold; color: #0d47a1; }
-    .post-id { font-size: 0.85em; color: #666; margin-bottom: 3px; }
-    .post-title { font-size: 1em; color: #1a73e8; word-break: break-word; line-height: 1.4; }
+    .post-item:hover { background:#d0e7ff; border-color:#4682b4; }
+    .post-item.active { background:#a0d8ff; border-color:#1e90ff; font-weight:bold; }
+    .post-id { font-size:11px; color:#4682b4; margin-bottom:4px; }
+    .post-title { font-size:13px; color:#1e3a8a; word-break:break-word; }
 
-    .viewer-container { width: 80%; padding: 20px; position: relative; }
-    .viewer { width: 100%; height: calc(100vh - 40px); border: none; background: white;
-              border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: none; }
-    .viewer.active { display: block; }
-    .loading, .no-selection { text-align: center; padding: 50px 20px; color: #777; font-style: italic; }
-    .no-selection { font-size: 1.2em; }
+    .viewer-container { width:80%; padding:20px; position:relative; }
+    .viewer { width:100%; height:calc(100vh - 40px); border:none; background:white;
+              border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.1); display:none; }
+    .viewer.active { display:block; }
+    .loading, .no-selection { text-align:center; padding:60px 20px; color:#4682b4; font-style:italic; }
+    .no-selection { font-size:1.2em; }
   </style>
 </head>
 <body>
@@ -36,7 +52,7 @@
 
   <div class="viewer-container">
     <div class="no-selection" id="noSelection">
-      Bir post seçin →<br><small>İçeriği sağda göreceksiniz.</small>
+      ← Bir post seçin<br><small>İçerik sağda açılacak.</small>
     </div>
     <iframe class="viewer" id="viewer" sandbox="allow-same-origin allow-scripts allow-modals"></iframe>
     <div class="loading" id="loading">Yükleniyor...</div>
@@ -49,36 +65,44 @@
     const noSelection = document.getElementById('noSelection');
     let currentItem = null;
 
-    function getIdFromFile(filename) {
-      return filename.replace('.html', '');
-    }
+    // ALL_FILES listesindeki tüm dosyaları kullan
+    const files = ALL_FILES.filter(f => f !== 'index.html').sort((a,b) => b.localeCompare(a));
 
-    function extractTitleAndDate(doc) {
-      // 1. <title> varsa onu al
-      let title = doc.querySelector('title')?.innerText.trim();
-      if (title && title !== '') return { title, date: null };
+    files.forEach(file => {
+      const id = file.replace('.html', '');
+      const item = document.createElement('div');
+      item.className = 'post-item';
+      item.dataset.url = file;
+      item.innerHTML = `
+        <div class="post-id">#${id}</div>
+        <div class="post-title">Yükleniyor...</div>
+      `;
 
-      // 2. Yoksa <h1> al
-      title = doc.querySelector('h1')?.innerText.trim();
-      if (title && title !== '') {
-        // Tarih: footer > span#timestamp
-        const timestamp = doc.querySelector('#footer #timestamp')?.innerText.trim();
-        return { title, date: timestamp || null };
-      }
+      item.onclick = () => {
+        if (currentItem) currentItem.classList.remove('active');
+        currentItem = item;
+        item.classList.add('active');
+        noSelection.style.display = 'none';
+        loading.style.display = 'block';
+        viewer.classList.remove('active');
+        loadPost(file, item.querySelector('.post-title'));
+      };
 
-      return { title: 'Başlıksız', date: null };
-    }
+      postList.appendChild(item);
+    });
 
     function loadPost(file, titleEl) {
       fetch(file)
-        .then(r => { if (!r.ok) throw new Error('Dosya bulunamadı'); return r.text(); })
+        .then(r => { if (!r.ok) throw new Error('Bulunamadı'); return r.text(); })
         .then(html => {
           const doc = new DOMParser().parseFromString(html, 'text/html');
-          const { title, date } = extractTitleAndDate(doc);
+          let title = doc.querySelector('title')?.innerText.trim() ||
+                      doc.querySelector('h1')?.innerText.trim() ||
+                      file.replace('.html', '');
+          const timestamp = doc.querySelector('#footer #timestamp, #footer span')?.innerText.trim();
 
-          // Başlık + tarih göster
-          titleEl.innerHTML = date 
-            ? `${title}<br><small style="color:#666; font-weight:normal;">${date}</small>`
+          titleEl.innerHTML = timestamp
+            ? `${title}<br><small style="color:#4682b4;">${timestamp}</small>`
             : title;
 
           const iframeDoc = viewer.contentDocument;
@@ -88,55 +112,15 @@
           viewer.classList.add('active');
         })
         .catch(err => {
-          titleEl.textContent = 'Yüklenemedi';
-          loading.innerHTML = `<p style="color:red;">Hata: ${err.message}</p>`;
+          titleEl.innerHTML = '<span style="color:red;">Hata</span>';
+          loading.innerHTML = `<p style="color:red;">${err.message}</p>`;
         });
     }
 
-    // Ana dizindeki tüm .html dosyalarını çek
-    fetch('').then(r => r.text()).then(html => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const links = Array.from(doc.querySelectorAll('a[href$=".html"]'))
-        .map(a => a.getAttribute('href'))
-        .filter(f => f !== 'index.html' && !f.includes('/'))
-        .sort((a, b) => b.localeCompare(a)); // en yeniden eskiye
-
-      if (links.length === 0) {
-        postList.innerHTML = '<div style="padding:20px; color:#999;">Hiç post bulunamadı.</div>';
-        return;
-      }
-
-      links.forEach(file => {
-        const id = getIdFromFile(file);
-        const item = document.createElement('div');
-        item.className = 'post-item';
-        item.dataset.url = file;
-        item.innerHTML = `
-          <div class="post-id">#${id}</div>
-          <div class="post-title">Yükleniyor...</div>
-        `;
-
-        item.onclick = () => {
-          if (currentItem) currentItem.classList.remove('active');
-          currentItem = item;
-          item.classList.add('active');
-          noSelection.style.display = 'none';
-          loading.style.display = 'block';
-          viewer.classList.remove('active');
-          loadPost(file, item.querySelector('.post-title'));
-        };
-
-        postList.appendChild(item);
-      });
-
-      // İlk postu aç
-      if (links.length > 0) {
-        postList.firstElementChild.click();
-      }
-    }).catch(err => {
-      postList.innerHTML = `<div style="padding:20px; color:red;">Hata: ${err.message}</div>`;
-    });
+    // İlk postu aç
+    if (files.length > 0) {
+      postList.firstElementChild.click();
+    }
   </script>
 
 </body>
