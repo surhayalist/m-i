@@ -5,422 +5,138 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Blog Post Viewer</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Helvetica, Arial, sans-serif;
-    }
-
-    body {
-      display: flex;
-      height: 100vh;
-      background: #f9f9fc;
-      color: #222;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Helvetica, Arial, sans-serif; }
+    body { display: flex; height: 100vh; background: #f8f9fc; color: #222; }
+    
     .post-list {
-      width: 20%;
-      background: #fff;
-      border-right: 1px solid #e0e0e0;
-      overflow-y: auto;
-      padding: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      width: 20%; background: #fff; border-right: 1px solid #e0e0e0;
+      overflow-y: auto; padding: 15px; box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
-
     .post-item {
-      margin-bottom: 10px;
-      padding: 12px;
-      border-radius: 8px;
-      background: #f8f9fa;
-      border: 1px solid #eee;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 0.95em;
+      margin-bottom: 10px; padding: 12px; border-radius: 8px;
+      background: #f8f9fa; border: 1px solid #eee; cursor: pointer;
+      transition: all 0.2s ease; font-size: 0.95em;
     }
+    .post-item:hover { background: #e3f2fd; border-color: #90caf9; }
+    .post-item.active { background: #bbdefb; border-color: #1976d2; font-weight: bold; color: #0d47a1; }
+    .post-id { font-size: 0.85em; color: #666; margin-bottom: 3px; }
+    .post-title { font-size: 1em; color: #1a73e8; word-break: break-word; line-height: 1.4; }
 
-    .post-item:hover {
-      background: #e3f2fd;
-      border-color: #90caf9;
-    }
-
-    .post-item.active {
-      background: #bbdefb;
-      border-color: #1976d2;
-      font-weight: bold;
-      color: #0d47a1;
-    }
-
-    .post-id {
-      font-size: 0.85em;
-      color: #666;
-      margin-bottom: 3px;
-    }
-
-    .post-title {
-      font-size: 1em;
-      color: #1a73e8;
-      word-break: break-word;
-      line-height: 1.4;
-    }
-
-    .viewer-container {
-      width: 80%;
-      padding: 20px;
-      position: relative;
-    }
-
-    .viewer {
-      width: 100%;
-      height: calc(100vh - 40px);
-      border: none;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      display: none;
-    }
-
-    .viewer.active {
-      display: block;
-    }
-
-    .loading, .no-selection {
-      text-align: center;
-      padding: 50px 20px;
-      color: #777;
-      font-style: italic;
-    }
-
-    .no-selection {
-      font-size: 1.2em;
-    }
+    .viewer-container { width: 80%; padding: 20px; position: relative; }
+    .viewer { width: 100%; height: calc(100vh - 40px); border: none; background: white;
+              border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: none; }
+    .viewer.active { display: block; }
+    .loading, .no-selection { text-align: center; padding: 50px 20px; color: #777; font-style: italic; }
+    .no-selection { font-size: 1.2em; }
   </style>
 </head>
 <body>
 
-  <!-- Sol Panel: Post Listesi -->
-  <div class="post-list" id="postList">
-    <!-- JavaScript ile doldurulacak -->
-  </div>
+  <div class="post-list" id="postList"></div>
 
-  <!-- Sağ Panel: Viewer -->
   <div class="viewer-container">
     <div class="no-selection" id="noSelection">
-      Bir post seçin →<br>
-      <small>İçeriği sağda göreceksiniz.</small>
+      Bir post seçin →<br><small>İçeriği sağda göreceksiniz.</small>
     </div>
     <iframe class="viewer" id="viewer" sandbox="allow-same-origin allow-scripts allow-modals"></iframe>
     <div class="loading" id="loading">Yükleniyor...</div>
   </div>
 
   <script>
-    // Tüm postları manuel olarak tanımla
-    const posts = [
-      { id: '790267754843389952', file: '790267754843389952.html' },
-      { id: '790267200134053888', file: '790267200134053888.html' },
-      { id: '740078419112509440', file: '740078419112509440.html' },
-      { id: '740077841581064192', file: '740077841581064192.html' },
-      { id: '730744175400714240', file: '730744175400714240.html' },
-      { id: '685184768606912512', file: 'submissions/685184768606912512.html' },
-      { id: '660851632235495424', file: '660851632235495424.html' },
-      { id: '178158583025', file: '178158583025.html' },
-      { id: '175955460615', file: '175955460615.html' },
-      { id: '173969590680', file: '173969590680.html' },
-      { id: '170581631945', file: '170581631945.html' },
-      { id: '169520146680', file: '169520146680.html' },
-      { id: '169517980940', file: '169517980940.html' },
-      { id: '166114953650', file: '166114953650.html' },
-      { id: '162195784950', file: '162195784950.html' },
-      { id: '160873179950', file: '160873179950.html' },
-      { id: '159671829030', file: '159671829030.html' },
-      { id: '159610793550', file: '159610793550.html' },
-      { id: '158959516390', file: '158959516390.html' },
-      { id: '158860944685', file: '158860944685.html' },
-      { id: '158860917620', file: '158860917620.html' },
-      { id: '158860885625', file: '158860885625.html' },
-      { id: '158644920355', file: '158644920355.html' },
-      { id: '158637131310', file: '158637131310.html' },
-      { id: '158551851555', file: '158551851555.html' },
-      { id: '157497032550', file: '157497032550.html' },
-      { id: '157495874975', file: '157495874975.html' },
-      { id: '156031125845', file: '156031125845.html' },
-      { id: '155693195025', file: '155693195025.html' },
-      { id: '155631955860', file: '155631955860.html' },
-      { id: '154089945605', file: '154089945605.html' },
-      { id: '154043156745', file: '154043156745.html' },
-      { id: '153989719815', file: '153989719815.html' },
-      { id: '153828104130', file: '153828104130.html' },
-      { id: '153247037915', file: '153247037915.html' },
-      { id: '153176258095', file: '153176258095.html' },
-      { id: '152823995165', file: '152823995165.html' },
-      { id: '152357970075', file: '152357970075.html' },
-      { id: '152273021915', file: '152273021915.html' },
-      { id: '152267947510', file: '152267947510.html' },
-      { id: '152251930445', file: '152251930445.html' },
-      { id: '152241898100', file: '152241898100.html' },
-      { id: '151620864920', file: '151620864920.html' },
-      { id: '151620431885', file: '151620431885.html' },
-      { id: '151620027980', file: '151620027980.html' },
-      { id: '149360040290', file: '149360040290.html' },
-      { id: '148888320300', file: '148888320300.html' },
-      { id: '147056565120', file: '147056565120.html' },
-      { id: '139935439090', file: '139935439090.html' },
-      { id: '137752238635', file: '137752238635.html' },
-      { id: '137751633250', file: '137751633250.html' },
-      { id: '136427464010', file: '136427464010.html' },
-      { id: '136425901765', file: '136425901765.html' },
-      { id: '134659289675', file: '134659289675.html' },
-      { id: '134288013530', file: '134288013530.html' },
-      { id: '133786629280', file: '133786629280.html' },
-      { id: '133359556735', file: '133359556735.html' },
-      { id: '132162303180', file: 'submissions/132162303180.html' },
-      { id: '131080190335', file: '131080190335.html' },
-      { id: '131022034380', file: '131022034380.html' },
-      { id: '130758949210', file: '130758949210.html' },
-      { id: '130758490450', file: '130758490450.html' },
-      { id: '130556010075', file: '130556010075.html' },
-      { id: '130407956460', file: '130407956460.html' },
-      { id: '130303006240', file: 'submissions/130303006240.html' },
-      { id: '130302978365', file: 'submissions/130302978365.html' },
-      { id: '130109352775', file: 'submissions/130109352775.html' },
-      { id: '130077197100', file: 'submissions/130077197100.html' },
-      { id: '130077188325', file: 'submissions/130077188325.html' },
-      { id: '130046041845', file: 'submissions/130046041845.html' },
-      { id: '130046011145', file: 'submissions/130046011145.html' },
-      { id: '130045985305', file: 'submissions/130045985305.html' },
-      { id: '130045967260', file: 'submissions/130045967260.html' },
-      { id: '129980462420', file: '129980462420.html' },
-      { id: '129978965475', file: '129978965475.html' },
-      { id: '129777278470', file: '129777278470.html' },
-      { id: '129245437050', file: '129245437050.html' },
-      { id: '128537007125', file: '128537007125.html' },
-      { id: '123037057850', file: '123037057850.html' },
-      { id: '122609651105', file: '122609651105.html' },
-      { id: '118354673145', file: '118354673145.html' },
-      { id: '115713230950', file: '115713230950.html' },
-      { id: '113266613920', file: '113266613920.html' },
-      { id: '113185821505', file: '113185821505.html' },
-      { id: '112546232770', file: '112546232770.html' },
-      { id: '110753703295', file: '110753703295.html' },
-      { id: '109783280460', file: '109783280460.html' },
-      { id: '109783183095', file: '109783183095.html' },
-      { id: '109706471710', file: '109706471710.html' },
-      { id: '109701663525', file: '109701663525.html' },
-      { id: '109674389475', file: '109674389475.html' },
-      { id: '109644452325', file: '109644452325.html' },
-      { id: '109572875265', file: '109572875265.html' },
-      { id: '109251413035', file: '109251413035.html' },
-      { id: '108933990630', file: '108933990630.html' },
-      { id: '108846211950', file: '108846211950.html' },
-      { id: '107413465375', file: '107413465375.html' },
-      { id: '106362743890', file: '106362743890.html' },
-      { id: '105931325820', file: '105931325820.html' },
-      { id: '105693078760', file: '105693078760.html' },
-      { id: '104514597995', file: '104514597995.html' },
-      { id: '104272377130', file: '104272377130.html' },
-      { id: '104258869420', file: '104258869420.html' },
-      { id: '103577160445', file: '103577160445.html' },
-      { id: '103577067850', file: '103577067850.html' },
-      { id: '103558207040', file: '103558207040.html' },
-      { id: '103387292200', file: '103387292200.html' },
-      { id: '103385348480', file: '103385348480.html' },
-      { id: '103385315130', file: '103385315130.html' },
-      { id: '103215551545', file: '103215551545.html' },
-      { id: '100940363435', file: '100940363435.html' },
-      { id: '100906105920', file: '100906105920.html' },
-      { id: '100618257375', file: '100618257375.html' },
-      { id: '100202312530', file: '100202312530.html' },
-      { id: '100153072670', file: '100153072670.html' },
-      { id: '100099408355', file: '100099408355.html' },
-      { id: '99756476550', file: '99756476550.html' },
-      { id: '99322145315', file: '99322145315.html' },
-      { id: '99131704550', file: '99131704550.html' },
-      { id: '99127510665', file: '99127510665.html' },
-      { id: '98988176250', file: '98988176250.html' },
-      { id: '98907884670', file: '98907884670.html' },
-      { id: '98397274675', file: '98397274675.html' },
-      { id: '98313709655', file: '98313709655.html' },
-      { id: '97605769990', file: '97605769990.html' },
-      { id: '96871991055', file: 'submissions/96871991055.html' },
-      { id: '96371902020', file: '96371902020.html' },
-      { id: '96370937765', file: '96370937765.html' },
-      { id: '96370767680', file: '96370767680.html' },
-      { id: '95679935900', file: '95679935900.html' },
-      { id: '93899094290', file: '93899094290.html' },
-      { id: '93864653700', file: 'submissions/93864653700.html' },
-      { id: '93777362855', file: '93777362855.html' },
-      { id: '93773174955', file: 'submissions/93773174955.html' },
-      { id: '93769403895', file: '93769403895.html' },
-      { id: '93768927235', file: '93768927235.html' },
-      { id: '93613027545', file: 'submissions/93613027545.html' },
-      { id: '91686660830', file: '91686660830.html' },
-      { id: '91408956515', file: '91408956515.html' },
-      { id: '90838364235', file: '90838364235.html' },
-      { id: '90652965130', file: '90652965130.html' },
-      { id: '90397372415', file: '90397372415.html' },
-      { id: '90285501390', file: '90285501390.html' },
-      { id: '90117606005', file: '90117606005.html' },
-      { id: '90068949750', file: '90068949750.html' },
-      { id: '89746559535', file: '89746559535.html' },
-      { id: '88604276730', file: '88604276730.html' },
-      { id: '88070768140', file: '88070768140.html' },
-      { id: '88070590580', file: '88070590580.html' },
-      { id: '86987991580', file: '86987991580.html' },
-      { id: '86450648900', file: '86450648900.html' },
-      { id: '86039020885', file: '86039020885.html' },
-      { id: '85904783885', file: '85904783885.html' },
-      { id: '85753249335', file: '85753249335.html' },
-      { id: '85457028730', file: '85457028730.html' },
-      { id: '85308029385', file: '85308029385.html' },
-      { id: '85305231905', file: '85305231905.html' },
-      { id: '84967826625', file: '84967826625.html' },
-      { id: '84967778350', file: '84967778350.html' },
-      { id: '84962236040', file: '84962236040.html' },
-      { id: '84811244950', file: '84811244950.html' },
-      { id: '84811219480', file: '84811219480.html' },
-      { id: '84811179855', file: '84811179855.html' },
-      { id: '84811160235', file: '84811160235.html' },
-      { id: '84811123910', file: '84811123910.html' },
-      { id: '84811075345', file: '84811075345.html' },
-      { id: '84811036890', file: '84811036890.html' },
-      { id: '84810986665', file: '84810986665.html' },
-      { id: '84810964425', file: '84810964425.html' },
-      { id: '84810934275', file: '84810934275.html' },
-      { id: '84706841785', file: '84706841785.html' },
-      { id: '84592969360', file: '84592969360.html' },
-      { id: '84449486475', file: '84449486475.html' },
-      { id: '84448014730', file: '84448014730.html' },
-      { id: '84342496285', file: '84342496285.html' },
-      { id: '84341198390', file: '84341198390.html' },
-      { id: '84299921215', file: '84299921215.html' },
-      { id: '84201556440', file: '84201556440.html' },
-      { id: '83979313082', file: '83979313082.html' },
-      { id: '83651154894', file: '83651154894.html' },
-      { id: '83651119809', file: '83651119809.html' },
-      { id: '83443713360', file: '83443713360.html' },
-      { id: '83342217047', file: '83342217047.html' },
-      { id: '56778515132', file: '56778515132.html' },
-      { id: '56734050014', file: '56734050014.html' },
-      { id: '56733487766', file: '56733487766.html' },
-      { id: '52853734073', file: '52853734073.html' },
-      { id: '52804841776', file: '52804841776.html' },
-      { id: '52790485789', file: '52790485789.html' },
-      { id: '52788427146', file: '52788427146.html' },
-      { id: '52787492568', file: '52787492568.html' },
-      { id: '52786920493', file: '52786920493.html' },
-      { id: '52786892755', file: '52786892755.html' },
-      { id: '52725381541', file: '52725381541.html' },
-      { id: '52725276372', file: '52725276372.html' },
-      { id: '52722015278', file: '52722015278.html' },
-      { id: '52643082115', file: '52643082115.html' },
-      { id: '52204495095', file: '52204495095.html' },
-      { id: '51735740384', file: '51735740384.html' },
-      { id: '51717616573', file: '51717616573.html' },
-      { id: '51626199952', file: '51626199952.html' },
-      { id: '51556719332', file: '51556719332.html' },
-      { id: '51545113044', file: '51545113044.html' },
-      { id: '51496089368', file: '51496089368.html' },
-      { id: '51481048711', file: '51481048711.html' },
-      { id: '51480831770', file: '51480831770.html' },
-      { id: '51480396354', file: '51480396354.html' },
-      { id: '51480292793', file: '51480292793.html' },
-      { id: '51480213795', file: '51480213795.html' },
-      { id: '51479881683', file: '51479881683.html' },
-      { id: '51479795454', file: '51479795454.html' },
-      { id: '51479724091', file: '51479724091.html' },
-      { id: '51479472372', file: '51479472372.html' },
-      { id: '51455472047', file: '51455472047.html' },
-      { id: '51407443044', file: '51407443044.html' },
-      { id: '51367977283', file: '51367977283.html' },
-      { id: '51310635994', file: '51310635994.html' },
-      { id: '51309034463', file: '51309034463.html' },
-      { id: '51308581785', file: '51308581785.html' },
-      { id: '51168066781', file: '51168066781.html' },
-      { id: '51166509533', file: '51166509533.html' },
-      { id: '51166173608', file: '51166173608.html' },
-      { id: '51166094663', file: '51166094663.html' },
-      { id: '51165914874', file: '51165914874.html' },
-      { id: '51164483746', file: '51164483746.html' },
-      { id: '51164389796', file: '51164389796.html' },
-      { id: '49422074371', file: '49422074371.html' },
-      { id: '49421990702', file: '49421990702.html' },
-      { id: '49421930384', file: '49421930384.html' },
-      { id: '49017942298', file: '49017942298.html' },
-      { id: '49017880935', file: '49017880935.html' },
-      { id: '48138735460', file: '48138735460.html' },
-      { id: '48138681123', file: '48138681123.html' },
-      { id: '16655683460', file: '16655683460.html' },
-      { id: '16655379362', file: '16655379362.html' },
-      { id: '16655114087', file: '16655114087.html' },
-      { id: '16585454389', file: '16585454389.html' },
-      { id: '16584335662', file: '16584335662.html' },
-      { id: '16584193999', file: '16584193999.html' },
-      { id: '16584178134', file: '16584178134.html' },
-      { id: '16584149104', file: '16584149104.html' }
-    ];
-
     const postList = document.getElementById('postList');
     const viewer = document.getElementById('viewer');
     const loading = document.getElementById('loading');
     const noSelection = document.getElementById('noSelection');
-
     let currentItem = null;
 
-    // Her post için liste elemanı oluştur
-    posts.forEach(post => {
-      const item = document.createElement('div');
-      item.className = 'post-item';
-      item.dataset.url = post.file;
+    function getIdFromFile(filename) {
+      return filename.replace('.html', '');
+    }
 
-      item.innerHTML = `
-        <div class="post-id">#${post.id}</div>
-        <div class="post-title">Yükleniyor...</div>
-      `;
+    function extractTitleAndDate(doc) {
+      // 1. <title> varsa onu al
+      let title = doc.querySelector('title')?.innerText.trim();
+      if (title && title !== '') return { title, date: null };
 
-      item.addEventListener('click', () => {
-        if (currentItem) currentItem.classList.remove('active');
-        currentItem = item;
-        item.classList.add('active');
+      // 2. Yoksa <h1> al
+      title = doc.querySelector('h1')?.innerText.trim();
+      if (title && title !== '') {
+        // Tarih: footer > span#timestamp
+        const timestamp = doc.querySelector('#footer #timestamp')?.innerText.trim();
+        return { title, date: timestamp || null };
+      }
 
-        noSelection.style.display = 'none';
-        loading.style.display = 'block';
-        viewer.style.display = 'none';
+      return { title: 'Başlıksız', date: null };
+    }
 
-        loadPost(post.file, item.querySelector('.post-title'));
-      });
-
-      postList.appendChild(item);
-    });
-
-    function loadPost(url, titleElement) {
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error('Dosya bulunamadı: ' + url);
-          return res.text();
-        })
+    function loadPost(file, titleEl) {
+      fetch(file)
+        .then(r => { if (!r.ok) throw new Error('Dosya bulunamadı'); return r.text(); })
         .then(html => {
           const doc = new DOMParser().parseFromString(html, 'text/html');
-          const title = doc.querySelector('title')?.innerText.trim() || 'Başlık Yok';
+          const { title, date } = extractTitleAndDate(doc);
 
-          titleElement.textContent = title;
+          // Başlık + tarih göster
+          titleEl.innerHTML = date 
+            ? `${title}<br><small style="color:#666; font-weight:normal;">${date}</small>`
+            : title;
 
           const iframeDoc = viewer.contentDocument;
-          iframeDoc.open();
-          iframeDoc.write(html);
-          iframeDoc.close();
+          iframeDoc.open(); iframeDoc.write(html); iframeDoc.close();
 
           loading.style.display = 'none';
-          viewer.style.display = 'block';
+          viewer.classList.add('active');
         })
         .catch(err => {
-          console.error(err);
-          titleElement.textContent = 'Yüklenemedi';
+          titleEl.textContent = 'Yüklenemedi';
           loading.innerHTML = `<p style="color:red;">Hata: ${err.message}</p>`;
         });
     }
 
-    // İlk postu otomatik aç (isteğe bağlı)
-    // if (posts.length > 0) document.querySelector('.post-item').click();
+    // Ana dizindeki tüm .html dosyalarını çek
+    fetch('').then(r => r.text()).then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const links = Array.from(doc.querySelectorAll('a[href$=".html"]'))
+        .map(a => a.getAttribute('href'))
+        .filter(f => f !== 'index.html' && !f.includes('/'))
+        .sort((a, b) => b.localeCompare(a)); // en yeniden eskiye
+
+      if (links.length === 0) {
+        postList.innerHTML = '<div style="padding:20px; color:#999;">Hiç post bulunamadı.</div>';
+        return;
+      }
+
+      links.forEach(file => {
+        const id = getIdFromFile(file);
+        const item = document.createElement('div');
+        item.className = 'post-item';
+        item.dataset.url = file;
+        item.innerHTML = `
+          <div class="post-id">#${id}</div>
+          <div class="post-title">Yükleniyor...</div>
+        `;
+
+        item.onclick = () => {
+          if (currentItem) currentItem.classList.remove('active');
+          currentItem = item;
+          item.classList.add('active');
+          noSelection.style.display = 'none';
+          loading.style.display = 'block';
+          viewer.classList.remove('active');
+          loadPost(file, item.querySelector('.post-title'));
+        };
+
+        postList.appendChild(item);
+      });
+
+      // İlk postu aç
+      if (links.length > 0) {
+        postList.firstElementChild.click();
+      }
+    }).catch(err => {
+      postList.innerHTML = `<div style="padding:20px; color:red;">Hata: ${err.message}</div>`;
+    });
   </script>
 
 </body>
